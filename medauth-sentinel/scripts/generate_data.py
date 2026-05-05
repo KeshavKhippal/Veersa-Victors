@@ -10,10 +10,8 @@ import sys
 import random
 from datetime import datetime, timedelta
 
-# Fix Windows console encoding
 sys.stdout.reconfigure(encoding='utf-8')
 
-# Ensure data directory exists
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -69,12 +67,8 @@ def generate_patients():
             "city": random.choice(cities)
         })
 
-    # Fix specific patients for demo scenarios
-    # P001 must be BlueCross (for Scenario A — Ozempic approval)
     patients[0]["payer"] = "BlueCross"
-    # P005 must be BlueCross (for Scenario B — Ozempic denial)
     patients[4]["payer"] = "BlueCross"
-    # P010 must be Aetna (for Scenario C — E11.65 variant, POL-002 accepts E11.65)
     patients[9]["payer"] = "Aetna"
 
     return patients
@@ -94,7 +88,6 @@ def generate_diagnoses(patients):
     for p in patients:
         pid = p["patient_id"]
 
-        # Fixed diagnoses for demo scenarios
         if pid == "P001":
             diagnoses.append({
                 "patient_id": pid,
@@ -117,7 +110,6 @@ def generate_diagnoses(patients):
                 "diagnosed_date": random_date(2020, 2023)
             })
         else:
-            # Random diagnosis from pool
             code, desc = random.choice(diagnosis_pool)
             diagnoses.append({
                 "patient_id": pid,
@@ -126,7 +118,6 @@ def generate_diagnoses(patients):
                 "diagnosed_date": random_date(2020, 2024)
             })
 
-        # Some patients get a secondary diagnosis
         if random.random() < 0.3 and pid not in ("P001", "P005", "P010"):
             code2, desc2 = random.choice(diagnosis_pool)
             diagnoses.append({
@@ -158,7 +149,6 @@ def generate_medications(patients):
         pid = p["patient_id"]
 
         if pid == "P001":
-            # P001 MUST have Metformin (active) — needed for Scenario A approval
             medications.append({
                 "patient_id": pid,
                 "drug_name": "Metformin",
@@ -166,7 +156,6 @@ def generate_medications(patients):
                 "started_date": random_date(2020, 2023),
                 "status": "active"
             })
-            # Add a secondary med
             medications.append({
                 "patient_id": pid,
                 "drug_name": "Lisinopril",
@@ -175,7 +164,6 @@ def generate_medications(patients):
                 "status": "active"
             })
         elif pid == "P005":
-            # P005 must NOT have Metformin — needed for Scenario B denial
             medications.append({
                 "patient_id": pid,
                 "drug_name": "Atorvastatin",
@@ -191,7 +179,6 @@ def generate_medications(patients):
                 "status": "active"
             })
         elif pid == "P010":
-            # P010 MUST have Metformin (active) — needed for Scenario C critic override
             medications.append({
                 "patient_id": pid,
                 "drug_name": "Metformin",
@@ -207,7 +194,6 @@ def generate_medications(patients):
                 "status": "active"
             })
         else:
-            # 1-2 random meds for other patients
             num_meds = random.randint(1, 2)
             chosen = random.sample(med_pool, num_meds)
             for drug, dose in chosen:
@@ -435,10 +421,8 @@ def main():
     print("MedAuth Sentinel — Data Generator")
     print("=" * 50)
 
-    # Set seed for reproducibility
     random.seed(42)
 
-    # Generate all data
     print("\nGenerating data...\n")
 
     patients = generate_patients()

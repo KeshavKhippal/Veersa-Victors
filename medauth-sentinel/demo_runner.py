@@ -8,7 +8,6 @@ import sys
 import os
 import json
 
-# Ensure project root is on path
 sys.path.insert(0, os.path.dirname(__file__))
 
 from backend.orchestrator import run_prior_auth

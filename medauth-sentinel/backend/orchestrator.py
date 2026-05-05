@@ -25,7 +25,6 @@ def run_prior_auth(request: dict) -> dict:
     """
     trace = []  # every agent step gets appended here
 
-    # ---- STEP 1: INTAKE VALIDATION ----
     intake_agent = IntakeAgent()
     intake_result = intake_agent.run(request)
     trace.append({
@@ -35,7 +34,6 @@ def run_prior_auth(request: dict) -> dict:
         "output": intake_result
     })
 
-    # If intake fails, stop here
     if not intake_result.get("valid", False):
         return {
             "status": "REJECTED_AT_INTAKE",
@@ -46,7 +44,6 @@ def run_prior_auth(request: dict) -> dict:
             "request": request
         }
 
-    # ---- STEP 2: INITIAL DECISION ----
     decision_agent = DecisionAgent()
     decision_result = decision_agent.run(request)
     trace.append({
@@ -56,7 +53,6 @@ def run_prior_auth(request: dict) -> dict:
         "output": decision_result
     })
 
-    # ---- STEP 3: CRITIC REVIEW ----
     critic_agent = CriticAgent()
     critic_result = critic_agent.run(request, decision_result)
     trace.append({
@@ -66,12 +62,10 @@ def run_prior_auth(request: dict) -> dict:
         "output": critic_result
     })
 
-    # ---- STEP 4: REVISION IF CRITIC DISAGREES ----
     final_decision = decision_result
     revision_made = False
 
     if not critic_result.get("agrees", True) and critic_result.get("severity") in ["minor", "major"]:
-        # DecisionAgent runs again with critic feedback
         revised_result = decision_agent.run(request, critic_feedback=critic_result)
         trace.append({
             "step": 4,
@@ -83,7 +77,6 @@ def run_prior_auth(request: dict) -> dict:
         final_decision = revised_result
         revision_made = True
 
-    # ---- FINAL OUTPUT ----
     return {
         "status": "COMPLETED",
         "final_decision": final_decision.get("decision", "ERROR"),

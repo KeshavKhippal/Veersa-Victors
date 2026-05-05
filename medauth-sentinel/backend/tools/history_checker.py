@@ -17,7 +17,6 @@ def get_prior_auth_history(patient_id: str) -> list:
         with open(filepath, "r", encoding="utf-8") as f:
             auths = json.load(f)
         patient_auths = [a for a in auths if a["patient_id"] == patient_id]
-        # Sort by date descending (most recent first)
         patient_auths.sort(key=lambda x: x.get("date", ""), reverse=True)
         return patient_auths
     except FileNotFoundError:
@@ -37,7 +36,6 @@ def get_last_auth_for_drug(patient_id: str, drug_name: str) -> dict:
         ]
         if not matching:
             return {}
-        # Return most recent
         matching.sort(key=lambda x: x.get("date", ""), reverse=True)
         return matching[0]
     except FileNotFoundError:

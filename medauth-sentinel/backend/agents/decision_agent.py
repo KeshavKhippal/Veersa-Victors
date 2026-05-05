@@ -20,7 +20,6 @@ class DecisionAgent:
         self.client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         self.model = "llama-3.3-70b-versatile"
 
-        # Load prompt from YAML — never hardcoded
         prompt_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
             "prompts", "decision_agent.yaml"
@@ -39,17 +38,13 @@ class DecisionAgent:
         Returns:
             dict with decision, confidence, reasoning, criteria_met, missing_info
         """
-        # Step 1: Get patient full profile via tools
         patient_profile = get_patient_full_profile(request.get("patient_id", ""))
 
-        # Step 2: Get payer from patient, then look up policy
         payer = patient_profile.get("patient", {}).get("payer", "")
         policy = get_policy_for_drug(payer, request.get("drug_requested", ""))
 
-        # Step 3: Get prior auth history
         history = get_prior_auth_history(request.get("patient_id", ""))
 
-        # Step 4: Build the message
         user_message = f"""PATIENT PROFILE:
 {json.dumps(patient_profile, indent=2)}
 
@@ -62,7 +57,6 @@ PRIOR AUTHORIZATION HISTORY:
 CURRENT REQUEST:
 {json.dumps(request, indent=2)}"""
 
-        # Add critic feedback if this is a revision
         if critic_feedback is not None:
             user_message += f"""
 
@@ -81,7 +75,6 @@ or medical necessity context not in the structured data above.
 """
         user_message += "\n\nRespond with ONLY the JSON object as specified."
 
-        # Step 5: Call Groq
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -93,7 +86,6 @@ or medical necessity context not in the structured data above.
                 max_tokens=1500,
             )
 
-            # Extract and clean response
             response_text = response.choices[0].message.content
             cleaned = response_text.strip()
             if cleaned.startswith("```json"):
@@ -104,7 +96,6 @@ or medical necessity context not in the structured data above.
                 cleaned = cleaned[:-3]
             cleaned = cleaned.strip()
 
-            # Parse JSON
             result = json.loads(cleaned)
             return result
 

@@ -19,7 +19,6 @@ class CriticAgent:
         self.client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         self.model = "llama-3.3-70b-versatile"
 
-        # Load prompt from YAML — never hardcoded
         prompt_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
             "prompts", "critic_agent.yaml"
@@ -38,14 +37,11 @@ class CriticAgent:
         Returns:
             dict with agrees, severity, issues_found, specific_flags, suggested_revision, critic_summary
         """
-        # Step 1: Get patient full profile
         patient_profile = get_patient_full_profile(request.get("patient_id", ""))
 
-        # Step 2: Get payer policy
         payer = patient_profile.get("patient", {}).get("payer", "")
         policy = get_policy_for_drug(payer, request.get("drug_requested", ""))
 
-        # Step 3: Build the message
         user_message = f"""ORIGINAL REQUEST:
 {json.dumps(request, indent=2)}
 
@@ -70,7 +66,6 @@ or medical necessity context not in the structured data above.
 """
         user_message += "\n\nRespond with ONLY the JSON object as specified."
 
-        # Step 4: Call Groq
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -82,7 +77,6 @@ or medical necessity context not in the structured data above.
                 max_tokens=1500,
             )
 
-            # Extract and clean response
             response_text = response.choices[0].message.content
             cleaned = response_text.strip()
             if cleaned.startswith("```json"):
@@ -93,7 +87,6 @@ or medical necessity context not in the structured data above.
                 cleaned = cleaned[:-3]
             cleaned = cleaned.strip()
 
-            # Parse JSON
             result = json.loads(cleaned)
             return result
 

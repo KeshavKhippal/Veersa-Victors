@@ -18,7 +18,6 @@ class IntakeAgent:
         self.client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         self.model = "llama-3.3-70b-versatile"
 
-        # Load prompt from YAML — never hardcoded
         prompt_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
             "prompts", "intake_agent.yaml"
@@ -36,11 +35,9 @@ class IntakeAgent:
         Returns:
             dict with valid, patient_found, issues, validated_fields, intake_summary
         """
-        # Step 1: Check if patient exists via tool
         patient_result = get_patient(request.get("patient_id", ""))
         patient_found = "error" not in patient_result
 
-        # Step 2: Build the message
         user_message = f"""CURRENT REQUEST:
 {json.dumps(request, indent=2)}
 
@@ -60,7 +57,6 @@ or medical necessity context not in the structured data above.
 """
         user_message += "\n\nRespond with ONLY the JSON object as specified."
 
-        # Step 3: Call Groq
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -72,10 +68,8 @@ or medical necessity context not in the structured data above.
                 max_tokens=1000,
             )
 
-            # Step 4: Extract response text
             response_text = response.choices[0].message.content
 
-            # Step 5: Clean the response — remove ```json or ``` markers
             cleaned = response_text.strip()
             if cleaned.startswith("```json"):
                 cleaned = cleaned[7:]
@@ -85,7 +79,6 @@ or medical necessity context not in the structured data above.
                 cleaned = cleaned[:-3]
             cleaned = cleaned.strip()
 
-            # Step 6: Parse JSON
             result = json.loads(cleaned)
             return result
 

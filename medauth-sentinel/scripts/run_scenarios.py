@@ -151,7 +151,6 @@ def run_all():
                 "duration": 0
             })
 
-    # ── Summary Table ──────────────────────────────────────
     total_time = int(time.time() - total_start)
     all_passed = all(r["passed"] for r in results)
 

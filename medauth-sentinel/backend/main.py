@@ -16,7 +16,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.models import PARequest, PromptUpdate, Clinician, Notification
 from backend.orchestrator import run_prior_auth
 
-# Mock data for demonstration
 MOCK_CLINICIAN = {
     "id": "DR001",
     "name": "Dr. Jameson",
@@ -43,7 +42,6 @@ MOCK_NOTIFICATIONS = [
     }
 ]
 
-# Base paths
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 PROMPTS_DIR = os.path.join(BASE_DIR, "prompts")
@@ -114,13 +112,11 @@ app.add_middleware(
 )
 
 
-# ---- Endpoint 1: Root ----
 @app.get("/")
 def root():
     return {"message": "MedAuth Sentinel API is running", "version": "1.0.0"}
 
 
-# ---- Endpoint 2: Health Check ----
 @app.get("/api/health")
 def health_check():
     return {
@@ -129,7 +125,6 @@ def health_check():
     }
 
 
-# ---- Endpoint 3: Submit PA Request ----
 @app.post("/api/submit-request")
 def submit_request(request: PARequest):
     try:
@@ -139,7 +134,6 @@ def submit_request(request: PARequest):
         raise HTTPException(status_code=500, detail=f"Orchestrator error: {str(e)}")
 
 
-# ---- Endpoint 4: Get All Patients ----
 @app.get("/api/patients")
 def get_patients():
     try:
@@ -151,7 +145,6 @@ def get_patients():
         raise HTTPException(status_code=404, detail="patients.json not found")
 
 
-# ---- Endpoint 5: Get All Prompts ----
 @app.get("/api/prompts")
 def get_prompts():
     prompts = {}
@@ -165,7 +158,6 @@ def get_prompts():
     return prompts
 
 
-# ---- Endpoint 6: Update Agent Prompt ----
 @app.put("/api/prompts/{agent_name}")
 def update_prompt(agent_name: str, update: PromptUpdate):
     valid_agents = ["intake_agent", "decision_agent", "critic_agent"]
@@ -193,7 +185,6 @@ def update_prompt(agent_name: str, update: PromptUpdate):
         raise HTTPException(status_code=500, detail=f"Error updating prompt: {str(e)}")
 
 
-# ---- Endpoint 7: Get Demo Scenarios ----
 @app.get("/api/scenarios")
 def get_scenarios():
     return [
@@ -233,13 +224,11 @@ def get_scenarios():
     ]
 
 
-# ---- Endpoint 8: Get Current Clinician ----
 @app.get("/api/user", response_model=Clinician)
 def get_current_user():
     return MOCK_CLINICIAN
 
 
-# ---- Endpoint 9: Get Notifications ----
 @app.get("/api/notifications", response_model=list[Notification])
 def get_notifications():
     return MOCK_NOTIFICATIONS
