@@ -45,11 +45,33 @@ class DecisionAgent:
 
         history = get_prior_auth_history(request.get("patient_id", ""))
 
+        # Build policy section — handle web search results specially
+        policy_section = ""
+        if policy.get("action_required") == "AGENT_MECHANISM_CHECK":
+            policy_section = f"""PAYER POLICY STATUS: Drug not found in policy database via name matching.
+A real-time web search was conducted automatically.
+
+{policy.get("web_search_summary", "No web search results available.")}
+
+COVERED DRUGS FOR {policy.get("payer", "this payer")}:
+{json.dumps(policy.get("covered_drugs_for_payer", []), indent=2)}
+
+FULL PAYER POLICIES (for reference):
+{json.dumps(policy.get("full_payer_policies", []), indent=2)}
+
+INSTRUCTION: Use the web search results above to identify the 
+requested drug's active ingredient and mechanism. Then determine 
+if any covered drug shares the same molecule or mechanism.
+"""
+        else:
+            policy_section = f"""PAYER POLICY FOR REQUESTED DRUG:
+{json.dumps(policy, indent=2)}
+"""
+
         user_message = f"""PATIENT PROFILE:
 {json.dumps(patient_profile, indent=2)}
 
-PAYER POLICY FOR REQUESTED DRUG:
-{json.dumps(policy, indent=2)}
+{policy_section}
 
 PRIOR AUTHORIZATION HISTORY:
 {json.dumps(history, indent=2)}

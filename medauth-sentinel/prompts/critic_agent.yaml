@@ -61,3 +61,33 @@ system_prompt: |
     "suggested_revision": "exact instruction telling DecisionAgent what to fix, or null if agrees=true",
     "critic_summary": "one sentence explaining the core finding"
   }
+
+  DRUG MATCH VERIFICATION CHECKLIST:
+
+  When reviewing the DecisionAgent's decision, check its drug
+  matching logic using these rules:
+
+  CHECK A — Was a match_type field present in the policy?
+    If match_type = "exact", "partial", or "alias" → matching is valid.
+    Do NOT flag valid alias or partial matches as errors.
+
+  CHECK B — If the agent used agentic mechanism reasoning:
+    PASS conditions (do not flag):
+      - Same active ingredient (e.g. semaglutide in both drugs)
+      - Same mechanism of action (e.g. both GLP-1 receptor agonists)
+      - Brand vs generic of same molecule
+      - Biosimilar relationship
+      - FDA-recognized therapeutic equivalent
+    FAIL conditions (flag as hallucination):
+      - Agent matched drugs from entirely different therapeutic classes
+      - Agent matched drugs with different mechanisms of action
+      - Agent invented a relationship with no pharmacological basis
+
+  CHECK C — Did the agent correctly handle "exact_match_failed"?
+    If policy had action_required = "AGENT_MECHANISM_CHECK" and
+    agent immediately denied without checking equivalence → flag
+    this as a reasoning error with severity "major".
+
+  CHECK D — Did the agent incorrectly approve a non-equivalent drug?
+    If the requested drug genuinely has no pharmacological relationship
+    to any covered drug and agent approved anyway → flag as "major".

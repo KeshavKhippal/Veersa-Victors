@@ -1,3 +1,4 @@
+/**
  * MedAuth Sentinel — Centralized API Configuration
  *
  * Development (npm start):

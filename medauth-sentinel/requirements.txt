@@ -6,3 +6,4 @@ python-dotenv
 pyyaml
 pytest
 httpx
+tavily-python>=0.3.0
