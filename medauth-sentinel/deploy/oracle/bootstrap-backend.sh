@@ -2,7 +2,10 @@
 set -euo pipefail
 
 APP_NAME="medauth-backend"
-APP_DIR="/opt/medauth-sentinel"
+INSTALL_DIR="/opt/medauth-sentinel"
+REPO_DIR="${INSTALL_DIR}/repo"
+APP_SUBDIR="${APP_SUBDIR:-medauth-sentinel}"
+APP_DIR="${REPO_DIR}/${APP_SUBDIR}"
 REPO_URL="${REPO_URL:-https://github.com/KeshavKhippal/Veersa-Victors.git}"
 BRANCH="${BRANCH:-main}"
 SERVICE_USER="${SERVICE_USER:-medauth}"
@@ -34,14 +37,19 @@ if ! id "${SERVICE_USER}" >/dev/null 2>&1; then
 fi
 
 echo "[3/8] Fetching application"
-if [[ -d "${APP_DIR}/.git" ]]; then
-  git -C "${APP_DIR}" fetch origin "${BRANCH}"
-  git -C "${APP_DIR}" reset --hard "origin/${BRANCH}"
+if [[ -d "${REPO_DIR}/.git" ]]; then
+  git -C "${REPO_DIR}" fetch origin "${BRANCH}"
+  git -C "${REPO_DIR}" reset --hard "origin/${BRANCH}"
 else
-  rm -rf "${APP_DIR}"
-  git clone --branch "${BRANCH}" "${REPO_URL}" "${APP_DIR}"
+  rm -rf "${REPO_DIR}"
+  mkdir -p "${INSTALL_DIR}"
+  git clone --branch "${BRANCH}" "${REPO_URL}" "${REPO_DIR}"
 fi
-chown -R "${SERVICE_USER}:${SERVICE_USER}" "${APP_DIR}"
+if [[ ! -f "${APP_DIR}/requirements.txt" ]]; then
+  echo "Could not find application at ${APP_DIR}. Set APP_SUBDIR if the repo layout changes."
+  exit 1
+fi
+chown -R "${SERVICE_USER}:${SERVICE_USER}" "${INSTALL_DIR}"
 
 echo "[4/8] Creating Python virtual environment"
 sudo -u "${SERVICE_USER}" python3 -m venv "${APP_DIR}/.venv"
@@ -118,7 +126,8 @@ cat > "${APP_DIR}/deploy/oracle/redeploy-backend.sh" <<'REDEPLOY'
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="/opt/medauth-sentinel"
+REPO_DIR="/opt/medauth-sentinel/repo"
+APP_DIR="${REPO_DIR}/medauth-sentinel"
 APP_NAME="medauth-backend"
 BRANCH="${BRANCH:-main}"
 SERVICE_USER="${SERVICE_USER:-medauth}"
@@ -128,9 +137,9 @@ if [[ "${EUID}" -ne 0 ]]; then
   exit 1
 fi
 
-git -C "${APP_DIR}" fetch origin "${BRANCH}"
-git -C "${APP_DIR}" reset --hard "origin/${BRANCH}"
-chown -R "${SERVICE_USER}:${SERVICE_USER}" "${APP_DIR}"
+git -C "${REPO_DIR}" fetch origin "${BRANCH}"
+git -C "${REPO_DIR}" reset --hard "origin/${BRANCH}"
+chown -R "${SERVICE_USER}:${SERVICE_USER}" "${REPO_DIR}"
 sudo -u "${SERVICE_USER}" "${APP_DIR}/.venv/bin/pip" install -r "${APP_DIR}/requirements.txt"
 systemctl restart "${APP_NAME}"
 systemctl status "${APP_NAME}" --no-pager
@@ -143,4 +152,3 @@ echo
 echo "Backend deployed."
 echo "Health check: http://$(curl -fsS ifconfig.me || hostname -I | awk '{print $1}')/api/health"
 systemctl status "${APP_NAME}" --no-pager
-

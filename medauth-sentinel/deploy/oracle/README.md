@@ -16,7 +16,7 @@ Oracle security list / network security group rules must allow HTTP traffic on p
 SSH into the VM, then run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/KeshavKhippal/Veersa-Victors/main/deploy/oracle/bootstrap-backend.sh -o bootstrap-backend.sh
+curl -fsSL https://raw.githubusercontent.com/KeshavKhippal/Veersa-Victors/main/medauth-sentinel/deploy/oracle/bootstrap-backend.sh -o bootstrap-backend.sh
 chmod +x bootstrap-backend.sh
 sudo GROQ_API_KEY="your_groq_api_key" TAVILY_API_KEY="your_tavily_api_key" ./bootstrap-backend.sh
 ```
@@ -33,6 +33,5 @@ Use `http://YOUR_VM_PUBLIC_IP` as the backend base URL for Vercel's `PUBLIC_API_
 ## Updating after a GitHub push
 
 ```bash
-sudo /opt/medauth-sentinel/deploy/oracle/redeploy-backend.sh
+sudo /opt/medauth-sentinel/repo/medauth-sentinel/deploy/oracle/redeploy-backend.sh
 ```
-
